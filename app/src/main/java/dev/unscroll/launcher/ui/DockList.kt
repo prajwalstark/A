@@ -8,11 +8,9 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
@@ -41,6 +39,7 @@ import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.onLongClick
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
@@ -59,6 +58,13 @@ import kotlin.math.roundToInt
 /** Height of one row at scale 1. Rows are laid out once at this size and scaled on the GPU. */
 private val RowHeight = 48.dp
 
+/** App icon size at scale 1, and the gap between icon and name. */
+private val IconSize = 36.dp
+private val IconGap = 10.dp
+
+/** The A–Z rail along the right edge, where your thumb scrubs through the apps. */
+private val RailWidth = 44.dp
+
 /** How tall the row under your finger gets, from subtle (strength 0) to huge (strength 1). */
 private val FocusHeightMin = 56.dp
 private val FocusHeightMax = 120.dp
@@ -71,11 +77,14 @@ private const val TEXT_FULL = 0.5f
 private const val TEXT_GONE = 0.3f
 
 /**
- * An app list that never scrolls. Every app fits on screen; slide a finger over it and the
- * apps near your finger magnify like the macOS Dock. Lift to open the highlighted app,
- * hold still for its menu, slide off the list to cancel.
+ * An app list that never scrolls. Every app fits on screen, packed against the bottom edge.
  *
- * Apps are drawn top to bottom in [apps] order, packed against the bottom edge.
+ * Slide your thumb along the A–Z rail on the right and the apps beside it magnify like the
+ * macOS Dock: they grow, their icons fade in, and they pop out toward the centre. Lift to open
+ * the highlighted app, hold still for its menu, slide off the list to cancel. The list itself
+ * is tap-to-open for any app that's readable.
+ *
+ * Without the rail ([showIndex] false, e.g. for search results) the whole list scrubs instead.
  */
 @Composable
 fun DockList(
@@ -86,7 +95,7 @@ fun DockList(
     onOpen: (AppInfo) -> Unit,
     onLongPress: (AppInfo) -> Unit,
     modifier: Modifier = Modifier,
-    /** Show A–Z markers beside the resting list (only makes sense when it's alphabetical). */
+    /** Show the A–Z rail (only makes sense when the list is alphabetical). */
     showIndex: Boolean = true,
     /** 0 = subtle, 1 = huge. */
     strength: Float = 0.5f,
@@ -100,6 +109,10 @@ fun DockList(
     val currentApps by rememberUpdatedState(apps)
     val focusHeight = focusHeight(strength)
     val currentFocusHeight by rememberUpdatedState(focusHeight)
+    val railWidth = if (showIndex) RailWidth else 0.dp
+    // With icons switched off, they still appear on the apps you magnify.
+    val iconsAtRest = iconStyle != IconStyle.NONE
+    val drawnIconStyle = if (iconStyle == IconStyle.MONO) IconStyle.MONO else IconStyle.COLOR
 
     // Finger position in px within this layout; negative when no finger is down.
     var fingerY by remember { mutableFloatStateOf(previewFingerY ?: -1f) }
@@ -112,48 +125,45 @@ fun DockList(
     val touchLens = remember(apps.size) { Fisheye(apps.size) }
     val labelWidths = remember(apps.size) { FloatArray(apps.size) }
 
-    // First letter of each alphabetical group, pre-measured so drawing them is cheap.
+    // First letter of each alphabetical group, pre-measured (normal and highlighted).
     val textMeasurer = rememberTextMeasurer()
-    val indexStyle = Type.Section.copy(color = look.highlight, fontSize = 11.sp, letterSpacing = 0.sp)
-    val indexLetters = remember(apps, labelOf, showIndex, indexStyle) {
-        if (!showIndex) return@remember emptyMap()
+    val letterStyle = Type.Section.copy(color = look.highlight, fontSize = 12.sp, letterSpacing = 0.sp)
+    val activeStyle = Type.Section.copy(color = look.onAccent, fontSize = 17.sp, letterSpacing = 0.sp)
+    val letters = remember(apps, labelOf, showIndex, letterStyle, activeStyle) {
+        if (!showIndex) return@remember RailLetters(IntArray(apps.size) { -1 }, emptyMap())
+        val groupOf = IntArray(apps.size)
+        val layouts = HashMap<Int, Pair<TextLayoutResult, TextLayoutResult>>()
         var previous: Char? = null
-        buildMap {
-            apps.forEachIndexed { i, app ->
-                val c = labelOf(app).firstOrNull()?.uppercaseChar()?.let { if (it.isLetter()) it else '#' }
-                if (c != null && c != previous) put(i, textMeasurer.measure(c.toString(), indexStyle))
-                previous = c
+        var groupStart = -1
+        apps.forEachIndexed { i, app ->
+            val c = labelOf(app).firstOrNull()?.uppercaseChar()?.let { if (it.isLetter()) it else '#' } ?: '#'
+            if (c != previous) {
+                groupStart = i
+                layouts[i] = textMeasurer.measure(c.toString(), letterStyle) to textMeasurer.measure(c.toString(), activeStyle)
             }
+            groupOf[i] = groupStart
+            previous = c
         }
+        RailLetters(groupOf, layouts)
     }
 
     Layout(
         modifier = modifier
             .drawBehind {
-                // Rows too small to read are drawn as thin bars, like a dock seen from afar.
                 val n = apps.size
                 if (n == 0) return@drawBehind
                 drawLens.solve(size.height, RowHeight.toPx(), focusHeight.toPx(), magnify.value, fingerY)
                 val pad = 4.dp.toPx()
-                var lastLetterY = Float.NEGATIVE_INFINITY
+                val rail = railWidth.toPx()
+
+                // Rows too small to read are drawn as thin bars, like a dock seen from afar.
                 for (i in 0 until n) {
                     val scale = drawLens.heights[i] / RowHeight.toPx()
                     // Bars clear out before the text fades in, so the two never overlap.
                     val barAlpha = (1f - textAlpha(scale) * 2f).coerceAtLeast(0f)
                     if (barAlpha <= 0f) continue
-                    indexLetters[i]?.let { letter ->
-                        val centre = drawLens.tops[i] + drawLens.heights[i] / 2f
-                        if (centre - lastLetterY >= letter.size.height) {
-                            drawText(
-                                letter,
-                                topLeft = Offset(size.width - letter.size.width - pad, centre - letter.size.height / 2f),
-                                alpha = barAlpha,
-                            )
-                            lastLetterY = centre
-                        }
-                    }
                     val h = (drawLens.heights[i] * 0.34f).coerceIn(1.5.dp.toPx(), 5.dp.toPx())
-                    val w = (labelWidths[i] * 0.55f).coerceAtLeast(18.dp.toPx())
+                    val w = (labelWidths[i] * 0.55f).coerceIn(18.dp.toPx(), size.width - rail - pad * 2)
                     drawRoundRect(
                         color = look.faint,
                         alpha = barAlpha * (if (apps[i].packageName in distracting) 0.45f else 0.9f),
@@ -162,15 +172,83 @@ fun DockList(
                         cornerRadius = CornerRadius(h / 2f),
                     )
                 }
+
+                if (rail <= 0f) return@drawBehind
+                // The rail: a soft track that lights up while your thumb is on it...
+                val railX = size.width - rail
+                val top = drawLens.tops[0]
+                drawRoundRect(
+                    brush = look.accentBrush,
+                    alpha = 0.06f + 0.10f * magnify.value,
+                    topLeft = Offset(railX + rail * 0.15f, top),
+                    size = Size(rail * 0.7f, size.height - top),
+                    cornerRadius = CornerRadius(rail * 0.35f),
+                )
+                // ...and a letter beside the first app of each group, following the magnification.
+                val activeGroup = if (focused in 0 until n) letters.groupOf[focused] else -1
+                var lastY = Float.NEGATIVE_INFINITY
+                for ((start, layouts) in letters.layouts.entries.sortedBy { it.key }) {
+                    val centre = drawLens.tops[start] + drawLens.heights[start] / 2f
+                    if (start == activeGroup) continue
+                    if (centre - lastY < layouts.first.size.height) continue
+                    drawText(
+                        layouts.first,
+                        topLeft = Offset(railX + (rail - layouts.first.size.width) / 2f, centre - layouts.first.size.height / 2f),
+                        alpha = 1f - 0.3f * magnify.value,
+                    )
+                    lastY = centre
+                }
+                // The current letter rides with your thumb in a lit bubble.
+                letters.layouts[activeGroup]?.second?.let { big ->
+                    val centre = if (fingerY >= 0f) fingerY else drawLens.tops[focused] + drawLens.heights[focused] / 2f
+                    val d = maxOf(big.size.width, big.size.height) + 12.dp.toPx()
+                    val cx = railX + rail / 2f
+                    drawRoundRect(
+                        brush = look.accentBrush,
+                        topLeft = Offset(cx - d / 2f, centre - d / 2f),
+                        size = Size(d, d),
+                        cornerRadius = CornerRadius(d / 2f),
+                    )
+                    drawText(big, topLeft = Offset(cx - big.size.width / 2f, centre - big.size.height / 2f))
+                }
             }
-            .pointerInput(apps.size) {
+            .pointerInput(apps.size, showIndex) {
                 awaitEachGesture {
                     val down = awaitFirstDown(requireUnconsumed = false)
                     val height = size.height.toFloat()
                     val rowPx = RowHeight.toPx()
                     val focusPx = currentFocusHeight.toPx()
-                    // Was this app list readable before you touched it? Then a plain tap opens.
                     val readableAtRest = touchLens.restScale(height, rowPx) >= TEXT_FULL
+                    val onRail = !showIndex || down.position.x >= size.width - RailWidth.toPx()
+
+                    if (!onRail) {
+                        // The list itself: tap a readable app to open it, hold for its menu.
+                        val index = touchLens.solve(height, rowPx, focusPx, 0f, down.position.y)
+                        val target = currentApps.getOrNull(index)
+                        val readable = readableAtRest && down.position.y >= touchLens.tops[0]
+                        val up = withTimeoutOrNull(viewConfiguration.longPressTimeoutMillis) {
+                            var result: Boolean? = null
+                            while (result == null) {
+                                val change = awaitPointerEvent().changes.firstOrNull { it.id == down.id }
+                                result = when {
+                                    change == null -> false
+                                    change.changedToUp() -> true
+                                    (change.position - down.position).getDistance() > viewConfiguration.touchSlop -> false
+                                    else -> null
+                                }
+                            }
+                            result
+                        }
+                        if (target != null && readable) {
+                            if (up == true) {
+                                open(target)
+                            } else if (up == null) {
+                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                menu(target)
+                            }
+                        }
+                        return@awaitEachGesture
+                    }
 
                     fun track(y: Float) {
                         fingerY = y
@@ -196,7 +274,7 @@ fun DockList(
                             awaitPointerEvent()
                         }
                         if (event == null) {
-                            // Held still: show the menu for the app under your finger.
+                            // Held still: show the menu for the app under your thumb.
                             menuShown = true
                             currentApps.getOrNull(focused)?.let {
                                 haptics.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -227,12 +305,13 @@ fun DockList(
         content = {
             apps.forEachIndexed { index, app ->
                 val isFocused by remember(index) { derivedStateOf { focused == index } }
+                val dimmed = app.packageName in distracting && !isFocused
+                Box(Modifier.alpha(if (dimmed) 0.5f else 1f)) { AppIcon(app, drawnIconStyle, IconSize) }
                 DockRow(
                     app = app,
                     label = labelOf(app),
                     style = Type.ListApp,
-                    iconStyle = iconStyle,
-                    dimmed = app.packageName in distracting,
+                    dimmed = dimmed,
                     focused = isFocused,
                     onOpen = { onOpen(app) },
                     onLongPress = { onLongPress(app) },
@@ -241,48 +320,74 @@ fun DockList(
         },
     ) { measurables, constraints ->
         val rowPx = RowHeight.roundToPx()
+        val iconPx = IconSize.roundToPx()
+        val gapPx = IconGap.toPx()
         val focusPx = focusHeight.toPx()
         val maxScale = focusPx / RowHeight.toPx()
-        // Leave room so a magnified row still fits the width.
-        val rowConstraints = Constraints(
-            maxWidth = (constraints.maxWidth / maxScale).roundToInt(),
+        val listWidth = (constraints.maxWidth - railWidth.toPx()).coerceAtLeast(0f)
+        // Leave room so a magnified icon + name still fits beside the rail.
+        val textConstraints = Constraints(
+            maxWidth = ((listWidth / maxScale) - iconPx - gapPx).roundToInt().coerceAtLeast(0),
             minHeight = rowPx,
             maxHeight = rowPx,
         )
-        val placeables = measurables.map { it.measure(rowConstraints) }
-        placeables.forEachIndexed { i, p -> if (i < labelWidths.size) labelWidths[i] = p.width.toFloat() }
+        val iconConstraints = Constraints.fixed(iconPx, iconPx)
+        val icons = ArrayList<androidx.compose.ui.layout.Placeable>(apps.size)
+        val rows = ArrayList<androidx.compose.ui.layout.Placeable>(apps.size)
+        measurables.forEachIndexed { i, m ->
+            if (i % 2 == 0) icons += m.measure(iconConstraints) else rows += m.measure(textConstraints)
+        }
+        rows.forEachIndexed { i, p -> if (i < labelWidths.size) labelWidths[i] = p.width.toFloat() }
 
-        val height = if (constraints.hasBoundedHeight) constraints.maxHeight else rowPx * placeables.size
+        val height = if (constraints.hasBoundedHeight) constraints.maxHeight else rowPx * rows.size
         layout(constraints.maxWidth, height) {
             val under = layoutLens.solve(height.toFloat(), rowPx.toFloat(), focusPx, magnify.value, fingerY)
             if (previewFingerY != null && focused != under) focused = under
             val restScale = layoutLens.restScale(height.toFloat(), rowPx.toFloat())
-            placeables.forEachIndexed { i, placeable ->
+            rows.forEachIndexed { i, row ->
                 val h = layoutLens.heights[i]
                 val scale = h / rowPx
-                val y = layoutLens.tops[i] + h / 2f - rowPx / 2f
-                // Pop out: the more a row is magnified, the further it slides toward the centre.
-                // The row under the finger ends up centred; its neighbours trace an arc.
+                val centreY = layoutLens.tops[i] + h / 2f
+                // How magnified this row is, 0..1, eased into a rounder arc.
                 val grown = if (maxScale > restScale) ((scale - restScale) / (maxScale - restScale)).coerceIn(0f, 1f) else 0f
-                val pop = grown * grown * (3f - 2f * grown) // smoothstep, for a rounder arc
-                val x = ((constraints.maxWidth - placeable.width * scale) / 2f).coerceAtLeast(0f) * pop
-                placeable.placeWithLayer(x.roundToInt(), y.roundToInt()) {
+                val pop = grown * grown * (3f - 2f * grown)
+                val iconShown = if (iconsAtRest) 1f else pop
+                val iconSpace = (iconPx + gapPx) * scale * iconShown
+                // Pop out: the more a row is magnified, the further it slides toward the centre.
+                val groupWidth = iconSpace + row.width * scale
+                val x = ((listWidth - groupWidth) / 2f).coerceAtLeast(0f) * pop
+                val fade = textAlpha(scale)
+
+                icons[i].placeWithLayer(x.roundToInt(), (centreY - iconPx / 2f).roundToInt()) {
+                    // Grow into exactly the space reserved for it, so it never overlaps the name.
+                    val s = scale * iconShown
+                    scaleX = s
+                    scaleY = s
+                    transformOrigin = TransformOrigin(0f, 0.5f)
+                    alpha = fade * iconShown
+                }
+                row.placeWithLayer((x + iconSpace).roundToInt(), (centreY - rowPx / 2f).roundToInt()) {
                     scaleX = scale
                     scaleY = scale
                     transformOrigin = TransformOrigin(0f, 0.5f)
-                    alpha = textAlpha(scale)
+                    alpha = fade
                 }
             }
         }
     }
 }
 
+/** For each app, the index of the first app in its letter group; and each group's letter. */
+private class RailLetters(
+    val groupOf: IntArray,
+    val layouts: Map<Int, Pair<TextLayoutResult, TextLayoutResult>>,
+)
+
 @Composable
 private fun DockRow(
     app: AppInfo,
     label: String,
     style: TextStyle,
-    iconStyle: IconStyle,
     dimmed: Boolean,
     focused: Boolean,
     onOpen: () -> Unit,
@@ -290,28 +395,24 @@ private fun DockRow(
 ) {
     val look = LocalLook.current
     val text = (if (app.isWorkProfile) "$label  ·  work" else label).label()
-    Row(
+    Box(
         Modifier
             .height(RowHeight)
             .padding(horizontal = 4.dp)
-            // The row itself isn't clickable (the list handles touch), but TalkBack can still open it.
+            // Touch is handled by the list, but TalkBack can still open each app directly.
             .semantics(mergeDescendants = true) {
                 role = Role.Button
                 onClick(label = "Open") { onOpen(); true }
                 onLongClick(label = "Options") { onLongPress(); true }
             },
-        verticalAlignment = Alignment.CenterVertically,
+        contentAlignment = Alignment.CenterStart,
     ) {
-        if (iconStyle != IconStyle.NONE) {
-            Row(Modifier.alpha(if (dimmed && !focused) 0.5f else 1f)) { AppIcon(app, iconStyle, 30.dp) }
-            Spacer(Modifier.width(14.dp))
-        }
         Text(
             text = text,
             style = (if (focused) style.merge(TextStyle(brush = look.accentBrush)) else style).readable(),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.alpha(if (dimmed && !focused) 0.55f else 1f),
+            modifier = Modifier.alpha(if (dimmed) 0.55f else 1f),
         )
     }
 }

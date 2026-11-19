@@ -4,7 +4,7 @@ A calm, minimalist Android launcher that makes your phone a tool again instead o
 
 <p>
   <img src="docs/home.png" width="250" alt="Home screen in the Sunset theme: gradient clock, date, screen time and five apps as text">
-  <img src="docs/app-list.png" width="250" alt="App list magnifying around the finger like the macOS Dock, with Maps highlighted">
+  <img src="docs/app-list.png" width="250" alt="App list magnifying like the macOS Dock while the thumb is on M in the A–Z rail; Maps is centered with its icon">
   <img src="docs/pause.png" width="250" alt="Mindful pause before opening Instagram">
 </p>
 
@@ -12,10 +12,11 @@ A calm, minimalist Android launcher that makes your phone a tool again instead o
 
 - **A quiet home screen.** A clock, today's screen time, and up to seven apps as plain text. No icons (unless you want them), badges, widgets, or feeds.
 - **One-hand friendly.** Your apps sit in the lower half of the screen. In the app list, the search box is at the bottom, and the best match lands right above it.
-- **A Dock-style app list that never scrolls.** Every app fits on screen, packed toward your thumb. Slide a finger over the list and the apps near it magnify like the macOS Dock and pop out toward the center of the screen in an arc, with a haptic tick as you pass each one. Set the strength with the Magnification slider in Settings.
-  - Lift your finger to open the highlighted app, hold still to open its menu, or slide off the list to cancel.
-  - With a long app list, the resting view becomes a compact stack of bars with A–Z markers, and magnification makes the area under your finger readable.
-  - Tap the search box to type instead. Press Enter to open the top match. In Settings you can have the keyboard open automatically.
+- **A Dock-style app list that never scrolls.** Every app fits on screen, packed toward your thumb.
+  - Slide your thumb along the A–Z rail on the right. The apps beside it magnify like the macOS Dock: they grow, their icons fade in, and they pop out toward the center. The current letter rides with your thumb, and a haptic tick plays as you pass each app.
+  - Lift to open the highlighted app, hold still to open its menu, or slide off the list to cancel. Tap any readable app in the list to open it directly.
+  - With a long app list, the resting view becomes a compact stack of bars, and magnification makes the area by your thumb readable.
+  - Set the strength with the Magnification slider in Settings. Tap the search box to type instead, or have the keyboard open automatically.
 - **Mindful pause.** Opening an app you've marked as distracting starts a short breathing countdown (5–30 s) that shows how often you've opened it today and how long you've spent in it. "Not now" is the big button.
 - **Adaptive notifications.** Pinned apps get a small dot when they have notifications. Distracting apps never do, and you can have their notifications held back and delivered together every hour or every 3 hours. Calls, alarms and reminders always come through.
 - **Two themes.**
@@ -38,7 +39,7 @@ Social and video apps such as Instagram, TikTok, YouTube, X, Reddit and Snapchat
 | Tap the clock | Alarms |
 | Long press an app | Pin, reorder, distracting, rename, hide, info, uninstall |
 
-In the app list, slide over the apps and lift to open one. Tap empty space or press Back to close it.
+In the app list, slide along the A–Z rail and lift to open an app, or tap any readable app. Tap empty space or press Back to close it.
 
 ## Install on your phone
 
