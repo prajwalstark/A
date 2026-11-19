@@ -102,6 +102,14 @@ fun SettingsScreen(vm: LauncherViewModel) {
             modifier = Modifier.padding(top = 8.dp, bottom = 8.dp),
         )
         SettingRow(
+            title = "Keyboard opens with app list",
+            subtitle = if (s.openKeyboard) "Type first: the list shrinks above the keyboard" else "Slide over the list; tap search to type",
+            trailing = {
+                Switch(checked = s.openKeyboard, onCheckedChange = { on -> vm.updateSettings { it.copy(openKeyboard = on) } })
+            },
+            onClick = { vm.updateSettings { it.copy(openKeyboard = !it.openKeyboard) } },
+        )
+        SettingRow(
             title = "Screen time on home",
             subtitle = if (s.showScreenTime && !status.hasUsageAccess) "Tap to allow usage access" else "How long you've used your phone today",
             trailing = {

@@ -73,6 +73,8 @@ data class LauncherSettings(
     val renamed: Map<String, String> = emptyMap(),
     val pauseSeconds: Int = 10,
     val showScreenTime: Boolean = true,
+    /** Pop up the keyboard as soon as the app list opens. */
+    val openKeyboard: Boolean = false,
     val iconStyle: IconStyle = IconStyle.NONE,
     val theme: ThemeStyle = ThemeStyle.SUNSET,
     val backdrop: Backdrop = Backdrop.DIM,
@@ -97,6 +99,7 @@ class Prefs(context: Context) {
             }.toMap(),
             pauseSeconds = sp.getInt(KEY_PAUSE, 10),
             showScreenTime = sp.getBoolean(KEY_SCREEN_TIME, true),
+            openKeyboard = sp.getBoolean(KEY_KEYBOARD, false),
             iconStyle = enumOrDefault(sp.getString(KEY_ICONS, null), IconStyle.NONE),
             theme = enumOrDefault(sp.getString(KEY_THEME, null), ThemeStyle.SUNSET),
             backdrop = enumOrDefault(sp.getString(KEY_BACKDROP, null), Backdrop.DIM),
@@ -118,6 +121,7 @@ class Prefs(context: Context) {
             s.renamed.forEach { (k, v) -> putString(LABEL + k, v) }
             putInt(KEY_PAUSE, s.pauseSeconds)
             putBoolean(KEY_SCREEN_TIME, s.showScreenTime)
+            putBoolean(KEY_KEYBOARD, s.openKeyboard)
             putString(KEY_ICONS, s.iconStyle.name)
             putString(KEY_THEME, s.theme.name)
             putString(KEY_BACKDROP, s.backdrop.name)
@@ -161,6 +165,7 @@ class Prefs(context: Context) {
         private const val KEY_HIDDEN = "hidden"
         private const val KEY_PAUSE = "pause_seconds"
         private const val KEY_SCREEN_TIME = "show_screen_time"
+        private const val KEY_KEYBOARD = "open_keyboard"
         private const val KEY_ICONS = "icon_style"
         private const val KEY_THEME = "theme"
         private const val KEY_BACKDROP = "backdrop"
