@@ -22,7 +22,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.unscroll.launcher.LauncherViewModel
 import dev.unscroll.launcher.PauseRequest
@@ -57,12 +56,13 @@ fun LauncherApp(vm: LauncherViewModel) {
     )
     val labelOf = remember(settings.renamed) { { app: AppInfo -> settings.renamed[app.key] ?: app.label } }
 
-    UnscrollTheme(onWallpaper = settings.backdrop != Backdrop.BLACK) {
+    UnscrollTheme(style = settings.theme, onWallpaper = settings.backdrop != Backdrop.BLACK) {
         CompositionLocalProvider(LocalIconLoader provides vm::icon) {
+            val night = LocalLook.current.night
             Box(
                 Modifier
                     .fillMaxSize()
-                    .drawBehind { drawRect(Color.Black.copy(alpha = scrim)) },
+                    .drawBehind { drawRect(night, alpha = scrim) },
             ) {
                 AnimatedContent(
                     targetState = screen,

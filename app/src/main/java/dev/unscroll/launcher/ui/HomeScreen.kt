@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -27,8 +26,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.AlignmentLine
+import androidx.compose.ui.layout.LastBaseline
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import dev.unscroll.launcher.HomeState
 import dev.unscroll.launcher.data.AppInfo
@@ -129,13 +133,25 @@ fun HomeScreen(
                         Modifier
                             .size(width = 36.dp, height = 4.dp)
                             .clip(RoundedCornerShape(50))
-                            .background(Ink.Primary.copy(alpha = 0.35f)),
+                            .background(LocalLook.current.outline ?: SolidColor(Ink.Primary.copy(alpha = 0.35f))),
                     )
                 }
             }
             Spacer(Modifier.height(12.dp))
         }
     }
+}
+
+/** Ends the layout [gap] below the text's baseline, dropping the font's built-in bottom space. */
+private fun Modifier.trimBelowBaseline(gap: Dp) = layout { measurable, constraints ->
+    val placeable = measurable.measure(constraints)
+    val baseline = placeable[LastBaseline]
+    val height = if (baseline == AlignmentLine.Unspecified) {
+        placeable.height
+    } else {
+        minOf(placeable.height, baseline + gap.roundToPx())
+    }
+    layout(placeable.width, height) { placeable.place(0, 0) }
 }
 
 @Composable
@@ -159,12 +175,13 @@ private fun Clock(screenTimeMs: Long?, onClick: () -> Unit) {
             onClick = onClick,
         ),
     ) {
-        Text(now.format(timeFormat), style = Type.Clock.readable())
-        Text(now.format(dateFormat), style = Type.Date.readable(), modifier = Modifier.padding(top = 2.dp))
+        // Display fonts carry a lot of empty space under the digits; keep the date snug.
+        Text(now.format(timeFormat), style = Type.Clock.readable(), modifier = Modifier.trimBelowBaseline(12.dp))
+        Text(now.format(dateFormat).label(), style = Type.Date.readable(), modifier = Modifier.padding(top = 2.dp))
         if (screenTimeMs != null) {
             Text(
                 "${ScreenTime.format(screenTimeMs)} on your phone today",
-                style = Type.Caption.copy(color = MaterialTheme.colorScheme.primary).readable(),
+                style = Type.Caption.copy(color = LocalLook.current.warm).readable(),
                 modifier = Modifier.padding(top = 10.dp),
             )
         }

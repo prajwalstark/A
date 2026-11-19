@@ -8,6 +8,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.updateAndGet
 import java.time.LocalDate
 
+enum class ThemeStyle { SUNSET, CLASSIC }
+
 enum class IconStyle { NONE, COLOR, MONO }
 
 enum class Backdrop { WALLPAPER, DIM, BLACK }
@@ -72,6 +74,7 @@ data class LauncherSettings(
     val pauseSeconds: Int = 10,
     val showScreenTime: Boolean = true,
     val iconStyle: IconStyle = IconStyle.NONE,
+    val theme: ThemeStyle = ThemeStyle.SUNSET,
     val backdrop: Backdrop = Backdrop.DIM,
     /** 0 = deliver distracting apps' notifications immediately. */
     val notificationBatchHours: Int = 0,
@@ -95,6 +98,7 @@ class Prefs(context: Context) {
             pauseSeconds = sp.getInt(KEY_PAUSE, 10),
             showScreenTime = sp.getBoolean(KEY_SCREEN_TIME, true),
             iconStyle = enumOrDefault(sp.getString(KEY_ICONS, null), IconStyle.NONE),
+            theme = enumOrDefault(sp.getString(KEY_THEME, null), ThemeStyle.SUNSET),
             backdrop = enumOrDefault(sp.getString(KEY_BACKDROP, null), Backdrop.DIM),
             notificationBatchHours = sp.getInt(KEY_BATCH, 0),
             gestures = Gesture.entries.associateWith { g ->
@@ -115,6 +119,7 @@ class Prefs(context: Context) {
             putInt(KEY_PAUSE, s.pauseSeconds)
             putBoolean(KEY_SCREEN_TIME, s.showScreenTime)
             putString(KEY_ICONS, s.iconStyle.name)
+            putString(KEY_THEME, s.theme.name)
             putString(KEY_BACKDROP, s.backdrop.name)
             putInt(KEY_BATCH, s.notificationBatchHours)
             s.gestures.forEach { (g, a) -> putString(GESTURE + g.name, a.encode()) }
@@ -157,6 +162,7 @@ class Prefs(context: Context) {
         private const val KEY_PAUSE = "pause_seconds"
         private const val KEY_SCREEN_TIME = "show_screen_time"
         private const val KEY_ICONS = "icon_style"
+        private const val KEY_THEME = "theme"
         private const val KEY_BACKDROP = "backdrop"
         private const val KEY_SEEDED = "seeded"
 

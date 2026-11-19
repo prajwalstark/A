@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -29,6 +28,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalDensity
@@ -37,6 +37,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import dev.unscroll.launcher.data.AppInfo
 import dev.unscroll.launcher.data.IconStyle
 
@@ -98,7 +99,7 @@ fun AppRow(
             Spacer(Modifier.width(16.dp))
         }
         Text(
-            text = if (app.isWorkProfile) "$label  ·  work" else label,
+            text = (if (app.isWorkProfile) "$label  ·  work" else label).label(),
             style = style.readable(),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -112,7 +113,7 @@ fun AppRow(
                 Modifier
                     .size(7.dp)
                     .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary),
+                    .background(LocalLook.current.highlight),
             )
         }
     }
@@ -124,15 +125,16 @@ fun <T> Choices(options: List<Pair<T, String>>, selected: T, onSelect: (T) -> Un
     Row(modifier, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         options.forEach { (value, label) ->
             val isSelected = value == selected
+            val look = LocalLook.current
             Text(
-                text = label,
-                style = Type.Body.copy(
-                    fontSize = Type.Body.fontSize * 0.88f,
-                    color = if (isSelected) MaterialTheme.colorScheme.onSecondaryContainer else Ink.Dim,
+                text = label.label(),
+                style = Type.Button.copy(
+                    fontSize = 15.sp,
+                    color = if (isSelected) look.onAccent else Ink.Dim,
                 ),
                 modifier = Modifier
                     .clip(RoundedCornerShape(50))
-                    .background(if (isSelected) MaterialTheme.colorScheme.secondaryContainer else Ink.Sheet)
+                    .background(if (isSelected) look.accentBrush else SolidColor(Ink.Sheet))
                     .clickable { onSelect(value) }
                     .padding(horizontal = 16.dp, vertical = 9.dp),
             )
@@ -144,7 +146,7 @@ fun <T> Choices(options: List<Pair<T, String>>, selected: T, onSelect: (T) -> Un
 fun SectionTitle(text: String) {
     Text(
         text = text.uppercase(),
-        style = Type.Section.copy(color = MaterialTheme.colorScheme.primary),
+        style = Type.Section.copy(color = LocalLook.current.highlight),
         modifier = Modifier.padding(top = 32.dp, bottom = 12.dp),
     )
 }

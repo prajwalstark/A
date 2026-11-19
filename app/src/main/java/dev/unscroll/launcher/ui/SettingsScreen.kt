@@ -39,6 +39,7 @@ import dev.unscroll.launcher.data.Gesture
 import dev.unscroll.launcher.data.GestureAction
 import dev.unscroll.launcher.data.IconStyle
 import dev.unscroll.launcher.data.ScreenTime
+import dev.unscroll.launcher.data.ThemeStyle
 import dev.unscroll.launcher.system.LockService
 import dev.unscroll.launcher.system.NotificationsService
 import dev.unscroll.launcher.system.SystemActions
@@ -62,7 +63,7 @@ fun SettingsScreen(vm: LauncherViewModel) {
             .padding(horizontal = 24.dp),
     ) {
         Spacer(Modifier.height(56.dp))
-        Text("Settings", style = Type.Title.copy(fontSize = Type.Title.fontSize * 1.2f))
+        Text("Settings".label(), style = Type.Title.copy(fontSize = Type.Title.fontSize * 1.2f))
 
         // ---- Home ---------------------------------------------------------------------
         SectionTitle("Home screen")
@@ -73,9 +74,19 @@ fun SettingsScreen(vm: LauncherViewModel) {
                 onClick = { SystemActions.openDefaultLauncherSettings(context) },
             )
         }
-        Text("Background", style = Type.Body, modifier = Modifier.padding(top = 8.dp, bottom = 10.dp))
+        Text("Theme", style = Type.Body, modifier = Modifier.padding(top = 8.dp, bottom = 10.dp))
         Choices(
-            options = listOf(Backdrop.WALLPAPER to "Wallpaper", Backdrop.DIM to "Dimmed", Backdrop.BLACK to "Black"),
+            options = listOf(ThemeStyle.SUNSET to "Sunset", ThemeStyle.CLASSIC to "Classic"),
+            selected = s.theme,
+            onSelect = { v -> vm.updateSettings { it.copy(theme = v) } },
+        )
+        Text("Background", style = Type.Body, modifier = Modifier.padding(top = 20.dp, bottom = 10.dp))
+        Choices(
+            options = listOf(
+                Backdrop.WALLPAPER to "Wallpaper",
+                Backdrop.DIM to "Dimmed",
+                Backdrop.BLACK to if (s.theme == ThemeStyle.SUNSET) "Night" else "Black",
+            ),
             selected = s.backdrop,
             onSelect = { v -> vm.updateSettings { it.copy(backdrop = v) } },
         )

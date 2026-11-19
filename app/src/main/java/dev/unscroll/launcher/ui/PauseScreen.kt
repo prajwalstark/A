@@ -22,7 +22,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -34,7 +33,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -53,7 +51,7 @@ private const val BREATH_MS = 4000
 fun PauseScreen(request: PauseRequest, seconds: Int, onOpen: () -> Unit, onCancel: () -> Unit) {
     var remaining by remember(request) { mutableIntStateOf(seconds) }
     var inhale by remember(request) { mutableStateOf(false) }
-    val accent = MaterialTheme.colorScheme.primary
+    val look = LocalLook.current
 
     LaunchedEffect(request) {
         while (remaining > 0) {
@@ -77,7 +75,7 @@ fun PauseScreen(request: PauseRequest, seconds: Int, onOpen: () -> Unit, onCance
     Box(
         Modifier
             .fillMaxSize()
-            .background(Color.Black)
+            .background(look.night)
             // Swallow touches so nothing underneath is tappable.
             .clickable(remember { MutableInteractionSource() }, indication = null) {}
             .systemBarsPadding()
@@ -88,23 +86,23 @@ fun PauseScreen(request: PauseRequest, seconds: Int, onOpen: () -> Unit, onCance
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Spacer(Modifier.weight(1f))
-            Text("Opening ${request.label}", style = Type.Caption)
+            Text("Opening ${request.label}".label(), style = Type.Section.copy(color = look.highlight))
             Spacer(Modifier.height(32.dp))
 
             Box(Modifier.size(240.dp), contentAlignment = Alignment.Center) {
                 Canvas(Modifier.fillMaxSize()) {
                     val r = size.minDimension / 2f
-                    drawCircle(accent.copy(alpha = 0.10f), radius = r * breath)
-                    drawCircle(accent.copy(alpha = 0.7f), radius = r * breath, style = Stroke(1.5.dp.toPx()))
+                    drawCircle(look.accentBrush, radius = r * breath, alpha = 0.12f)
+                    drawCircle(look.accentBrush, radius = r * breath, alpha = 0.9f, style = Stroke(2.dp.toPx()))
                 }
                 Text(
                     if (remaining > 0) "$remaining" else "",
-                    style = Type.Clock.copy(fontSize = 44.sp, color = Ink.Primary.copy(alpha = 0.85f)),
+                    style = Type.Clock.copy(fontSize = 52.sp, lineHeight = 56.sp),
                 )
             }
 
             Spacer(Modifier.height(28.dp))
-            Text(if (inhale) "Breathe in" else "Breathe out", style = Type.Title.copy(fontSize = 26.sp))
+            Text((if (inhale) "Breathe in" else "Breathe out").label(), style = Type.Title.copy(fontSize = 28.sp))
             Spacer(Modifier.height(16.dp))
             Text(
                 stats(request),
@@ -121,8 +119,8 @@ fun PauseScreen(request: PauseRequest, seconds: Int, onOpen: () -> Unit, onCance
             ) {
                 AnimatedVisibility(remaining == 0, enter = fadeIn(tween(400)), exit = fadeOut()) {
                     Text(
-                        "Open ${request.label} anyway",
-                        style = Type.Body.copy(color = Ink.Dim),
+                        "Open ${request.label} anyway".label(),
+                        style = Type.Button.copy(fontSize = 15.sp, color = Ink.Dim),
                         modifier = Modifier
                             .clip(RoundedCornerShape(50))
                             .clickable(onClick = onOpen)
@@ -131,12 +129,12 @@ fun PauseScreen(request: PauseRequest, seconds: Int, onOpen: () -> Unit, onCance
                 }
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    "Not now",
-                    style = Type.Body.copy(color = MaterialTheme.colorScheme.onPrimary, textAlign = TextAlign.Center),
+                    "Not now".label(),
+                    style = Type.Button.copy(color = look.onAccent, textAlign = TextAlign.Center),
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(50))
-                        .background(accent)
+                        .background(look.accentBrush)
                         .clickable(onClick = onCancel)
                         .padding(vertical = 16.dp),
                 )

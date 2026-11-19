@@ -56,7 +56,7 @@ fun AppSheet(app: AppInfo, vm: LauncherViewModel, onDismiss: () -> Unit) {
                 .navigationBarsPadding()
                 .padding(start = 24.dp, end = 24.dp, bottom = 16.dp),
         ) {
-            Text(label, style = Type.Title, modifier = Modifier.padding(bottom = 12.dp, start = 4.dp))
+            Text(label.label(), style = Type.Title, modifier = Modifier.padding(bottom = 12.dp, start = 4.dp))
 
             val favorites = settings.favorites
             val index = favorites.indexOf(app.key)

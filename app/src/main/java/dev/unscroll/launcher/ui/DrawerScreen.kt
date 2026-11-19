@@ -4,6 +4,7 @@ import android.app.SearchManager
 import android.content.Intent
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -167,13 +168,14 @@ fun DrawerScreen(
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(50))
                 .background(Ink.Sheet)
+                .then(LocalLook.current.outline?.let { Modifier.border(1.2.dp, it, RoundedCornerShape(50)) } ?: Modifier)
                 .padding(horizontal = 22.dp, vertical = 14.dp),
         ) {
             BasicTextField(
                 value = query,
                 onValueChange = { query = it },
                 singleLine = true,
-                textStyle = Type.Body.copy(fontSize = Type.ListApp.fontSize),
+                textStyle = Type.ListApp,
                 cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
                 keyboardOptions = KeyboardOptions(
                     capitalization = KeyboardCapitalization.None,
@@ -186,7 +188,7 @@ fun DrawerScreen(
                     .focusRequester(focus),
                 decorationBox = { field ->
                     if (query.isEmpty()) {
-                        Text("Search apps", style = Type.Body.copy(fontSize = Type.ListApp.fontSize, color = Ink.Faint))
+                        Text("Search apps".label(), style = Type.ListApp.copy(color = Ink.Faint))
                     }
                     field()
                 },

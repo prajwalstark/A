@@ -3,7 +3,7 @@
 A calm, minimalist Android launcher that makes your phone a tool again instead of a slot machine.
 
 <p>
-  <img src="docs/home.png" width="250" alt="Home screen: clock, today's screen time and five apps as text">
+  <img src="docs/home.png" width="250" alt="Home screen in the Sunset theme: gradient clock, date, screen time and five apps as text">
   <img src="docs/app-list.png" width="250" alt="App list with search box at the bottom; distracting apps are dimmed">
   <img src="docs/pause.png" width="250" alt="Mindful pause before opening Instagram">
 </p>
@@ -15,7 +15,10 @@ A calm, minimalist Android launcher that makes your phone a tool again instead o
 - **Search first.** Swipe up and the keyboard is already open. You type what you came for instead of browsing. Press Enter to open the top match.
 - **Mindful pause.** Opening an app you've marked as distracting starts a short breathing countdown (5–30 s) that shows how often you've opened it today and how long you've spent in it. "Not now" is the big button.
 - **Adaptive notifications.** Pinned apps get a small dot when they have notifications. Distracting apps never do, and you can have their notifications held back and delivered together every hour or every 3 hours. Calls, alarms and reminders always come through.
-- **Pixel-like look.** Material You accent colors taken from your wallpaper (Android 12+), with the wallpaper shown clear, dimmed, or replaced by pure black.
+- **Two themes.**
+  - **Sunset** (default): a neon dusk palette with hot pink to orange gradients, deep violet nights and aqua highlights. It uses the bold condensed Anton and Barlow fonts in a game-menu style.
+  - **Classic**: quiet, Pixel-like minimalism with Material You accent colors taken from your wallpaper (Android 12+).
+  - Either theme can show your wallpaper clear or dimmed, or hide it behind a solid background.
 - **Customizable.** Icons can be off, grayscale or in color. You can rename apps and hide apps. Five gestures (swipe up, down, left and right, and double-tap) can each open the app list, notifications or quick settings, lock the screen, or open any app.
 
 Social and video apps such as Instagram, TikTok, YouTube, X, Reddit and Snapchat are marked as distracting on first run if you have them installed. Long-press any app to change that.
@@ -84,3 +87,7 @@ app/src/main/java/dev/unscroll/launcher/
 ```
 
 Kotlin, Jetpack Compose, Material 3. Min Android 8.0 (API 26), target API 35.
+
+## Credits
+
+The Sunset theme uses [Anton](https://fonts.google.com/specimen/Anton) and [Barlow](https://fonts.google.com/specimen/Barlow) / [Barlow Condensed](https://fonts.google.com/specimen/Barlow+Condensed). Both are licensed under the SIL Open Font License 1.1, and the license texts are in `third_party/fonts/`.
