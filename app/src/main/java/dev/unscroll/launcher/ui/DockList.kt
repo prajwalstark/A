@@ -60,7 +60,7 @@ import kotlin.math.roundToInt
 private val RowHeight = 48.dp
 
 /** How tall the row under your finger gets. */
-private val FocusHeight = 62.dp
+private val FocusHeight = 88.dp
 
 /** Rows smaller than this (as a fraction of [RowHeight]) fade from text into a thin bar. */
 private const val TEXT_FULL = 0.5f
@@ -327,7 +327,7 @@ private class Fisheye(private val n: Int) {
         if (n == 0) return -1
         val total = used(height, rowPx)
         val top = height - total
-        val sigma = if (n > 30) 2.2f else 1.4f
+        val sigma = if (n > 30) 1.6f else 1.2f
         val spread = sigma * 2.5066f // area under the bump, in rows
 
         // Pick the bump height so the focused row lands near [focusPx], however many apps there are.
