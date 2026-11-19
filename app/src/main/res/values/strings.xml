@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Unscroll</string>
+    <string name="lock_service_label">Unscroll lock gesture</string>
+    <string name="lock_service_description">Lets a home-screen gesture, like double-tap, turn off the screen. Unscroll does not read anything on your screen.</string>
+</resources>
