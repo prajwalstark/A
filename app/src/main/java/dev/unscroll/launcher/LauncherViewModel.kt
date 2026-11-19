@@ -10,6 +10,7 @@ import dev.unscroll.launcher.data.AppInfo
 import dev.unscroll.launcher.data.AppRepository
 import dev.unscroll.launcher.data.Gesture
 import dev.unscroll.launcher.data.GestureAction
+import dev.unscroll.launcher.data.IconStyle
 import dev.unscroll.launcher.data.LauncherSettings
 import dev.unscroll.launcher.data.Prefs
 import dev.unscroll.launcher.data.ScreenTime
@@ -88,6 +89,8 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     private val stopObserving = repo.observeChanges { refreshApps() }
 
     init {
+        // The Niagara-style redesign makes themed icons the default; switch existing installs once.
+        if (prefs.consumeOnce("themed_icons_default")) prefs.update { it.copy(iconStyle = IconStyle.THEMED) }
         prefs.pruneOldCounters()
         refreshApps()
     }
@@ -113,11 +116,13 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
 
     /** The home button was pressed, or we left the screen while the app list was open. */
     fun goHome() {
+        _homeReset.value++
         _screen.value = Screen.Home
         _pause.value = null
     }
 
     fun onStop() {
+        _homeReset.value++
         if (_screen.value == Screen.Drawer) _screen.value = Screen.Home
         _pause.value = null
     }
@@ -151,11 +156,20 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
 
     fun labelOf(app: AppInfo): String = settings.value.renamed[app.key] ?: app.label
 
-    suspend fun icon(app: AppInfo, sizePx: Int): Bitmap? {
-        val cacheKey = "${app.key}@$sizePx"
+    private val noThemedIcon = HashSet<String>()
+
+    suspend fun icon(app: AppInfo, sizePx: Int, themed: Boolean): Bitmap? {
+        val cacheKey = "${app.key}@$sizePx${if (themed) "t" else ""}"
         icons.get(cacheKey)?.let { return it }
-        return withContext(Dispatchers.IO) { repo.loadIcon(app, sizePx) }?.also { icons.put(cacheKey, it) }
+        if (themed && cacheKey in noThemedIcon) return null
+        val bitmap = withContext(Dispatchers.IO) { repo.loadIcon(app, sizePx, themed) }
+        if (bitmap != null) icons.put(cacheKey, bitmap) else if (themed) noThemedIcon += cacheKey
+        return bitmap
     }
+
+    private val _homeReset = MutableStateFlow(0)
+    /** Bumps whenever home should go back to its resting state (favorites, no letter picked). */
+    val homeReset: StateFlow<Int> = _homeReset.asStateFlow()
 
     /** Opens [app], or shows the mindful pause first if it's marked as distracting. */
     fun open(app: AppInfo) {

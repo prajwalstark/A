@@ -41,8 +41,8 @@ import androidx.compose.ui.unit.sp
 import dev.unscroll.launcher.data.AppInfo
 import dev.unscroll.launcher.data.IconStyle
 
-/** Loads (and caches) an app icon at the given pixel size. */
-val LocalIconLoader = staticCompositionLocalOf<suspend (AppInfo, Int) -> Bitmap?> { { _, _ -> null } }
+/** Loads (and caches) an app icon at the given pixel size; `true` asks for the themed glyph only. */
+val LocalIconLoader = staticCompositionLocalOf<suspend (AppInfo, Int, Boolean) -> Bitmap?> { { _, _, _ -> null } }
 
 private val grayscale = ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(0f) })
 
@@ -50,7 +50,35 @@ private val grayscale = ColorFilter.colorMatrix(ColorMatrix().apply { setToSatur
 fun AppIcon(app: AppInfo, style: IconStyle, size: Dp) {
     val loader = LocalIconLoader.current
     val px = with(LocalDensity.current) { size.roundToPx() }
-    val bitmap by produceState<Bitmap?>(null, app.key, px) { value = loader(app, px) }
+    val themed = style == IconStyle.THEMED
+    val bitmap by produceState<Bitmap?>(null, app.key, px, themed) { value = loader(app, px, themed) }
+    if (themed) {
+        // A one-colour glyph on an accent tile; apps without a themed glyph get their initial.
+        val look = LocalLook.current
+        Box(
+            Modifier
+                .size(size)
+                .clip(RoundedCornerShape(size * 0.32f))
+                .background(look.iconBg),
+            contentAlignment = Alignment.Center,
+        ) {
+            val glyph = bitmap
+            if (glyph != null) {
+                Image(
+                    bitmap = glyph.asImageBitmap(),
+                    contentDescription = null,
+                    colorFilter = ColorFilter.tint(look.iconFg),
+                    modifier = Modifier.size(size * 0.9f),
+                )
+            } else {
+                Text(
+                    app.label.take(1).uppercase(),
+                    style = Type.Section.copy(color = look.iconFg, fontSize = (size.value * 0.44f).sp, letterSpacing = 0.sp),
+                )
+            }
+        }
+        return
+    }
     Box(Modifier.size(size)) {
         bitmap?.let {
             Image(

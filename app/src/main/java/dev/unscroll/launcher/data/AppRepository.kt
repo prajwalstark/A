@@ -7,6 +7,9 @@ import android.content.pm.ApplicationInfo
 import android.content.pm.LauncherApps
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.drawable.AdaptiveIconDrawable
+import android.os.Build
 import android.net.Uri
 import android.os.Handler
 import android.os.Looper
@@ -46,14 +49,27 @@ class AppRepository(context: Context) {
         }.sortedWith(compareBy(collator) { it.label })
     }
 
-    /** The app's icon (with work badge if needed), rendered at [sizePx]. Call off the main thread. */
-    fun loadIcon(app: AppInfo, sizePx: Int): Bitmap? = runCatching {
+    /**
+     * The app's icon rendered at [sizePx]. Call off the main thread.
+     *
+     * With [themed], returns only the icon's one-colour glyph (Android 13+ themed icons) as an
+     * alpha mask for the UI to tint, or null if the app doesn't provide one.
+     */
+    fun loadIcon(app: AppInfo, sizePx: Int, themed: Boolean = false): Bitmap? = runCatching {
         val intent = Intent(Intent.ACTION_MAIN)
             .addCategory(Intent.CATEGORY_LAUNCHER)
             .setComponent(app.component)
-        launcherApps.resolveActivity(intent, app.user)
-            ?.getBadgedIcon(0)
-            ?.toBitmap(sizePx, sizePx)
+        val info = launcherApps.resolveActivity(intent, app.user) ?: return null
+        if (!themed) return info.getBadgedIcon(0)?.toBitmap(sizePx, sizePx)
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return null
+        val glyph = (info.getIcon(0) as? AdaptiveIconDrawable)?.monochrome ?: return null
+        // Adaptive icon layers are 108dp with the visible part in the middle 72dp:
+        // draw them 1.5x larger so the visible part fills the bitmap.
+        val extra = sizePx / 4
+        Bitmap.createBitmap(sizePx, sizePx, Bitmap.Config.ARGB_8888).also { bitmap ->
+            glyph.setBounds(-extra, -extra, sizePx + extra, sizePx + extra)
+            glyph.draw(Canvas(bitmap))
+        }
     }.getOrNull()
 
     fun launch(app: AppInfo) {

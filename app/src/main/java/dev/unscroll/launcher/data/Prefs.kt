@@ -10,7 +10,8 @@ import java.time.LocalDate
 
 enum class ThemeStyle { SUNSET, CLASSIC }
 
-enum class IconStyle { NONE, COLOR, MONO }
+/** NONE = text only; THEMED = one-colour glyph on an accent tile (Android 13 themed icons). */
+enum class IconStyle { NONE, THEMED, COLOR, MONO }
 
 enum class Backdrop { WALLPAPER, DIM, BLACK }
 
@@ -79,7 +80,7 @@ data class LauncherSettings(
     val magnification: Float = 0.5f,
     /** A–Z rail on the left edge, for left-handed use. */
     val railOnLeft: Boolean = false,
-    val iconStyle: IconStyle = IconStyle.NONE,
+    val iconStyle: IconStyle = IconStyle.THEMED,
     val theme: ThemeStyle = ThemeStyle.SUNSET,
     val backdrop: Backdrop = Backdrop.DIM,
     /** 0 = deliver distracting apps' notifications immediately. */
@@ -106,7 +107,7 @@ class Prefs(context: Context) {
             openKeyboard = sp.getBoolean(KEY_KEYBOARD, false),
             magnification = sp.getFloat(KEY_MAGNIFICATION, 0.5f),
             railOnLeft = sp.getBoolean(KEY_RAIL_LEFT, false),
-            iconStyle = enumOrDefault(sp.getString(KEY_ICONS, null), IconStyle.NONE),
+            iconStyle = enumOrDefault(sp.getString(KEY_ICONS, null), IconStyle.THEMED),
             theme = enumOrDefault(sp.getString(KEY_THEME, null), ThemeStyle.SUNSET),
             backdrop = enumOrDefault(sp.getString(KEY_BACKDROP, null), Backdrop.DIM),
             notificationBatchHours = sp.getInt(KEY_BATCH, 0),
@@ -136,6 +137,14 @@ class Prefs(context: Context) {
             putInt(KEY_BATCH, s.notificationBatchHours)
             s.gestures.forEach { (g, a) -> putString(GESTURE + g.name, a.encode()) }
         }
+    }
+
+    /** True exactly once per [flag]: for one-off migrations when the defaults change. */
+    fun consumeOnce(flag: String): Boolean {
+        val key = "once:$flag"
+        if (sp.getBoolean(key, false)) return false
+        sp.edit { putBoolean(key, true) }
+        return true
     }
 
     /** True the first time the app list loads after install. */

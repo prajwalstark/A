@@ -44,6 +44,9 @@ data class Look(
     val night: Brush,
     /** Optional outline for the search pill. */
     val outline: Brush?,
+    /** Themed icon tile and the glyph drawn on it. */
+    val iconBg: Brush,
+    val iconFg: Color,
     /** Game-menu style: labels and titles in capitals. */
     val uppercase: Boolean,
     val clock: TextStyle,
@@ -108,6 +111,8 @@ private fun sunsetLook(): Look {
             1f to Sunset.NightBottom,
         ),
         outline = Brush.horizontalGradient(listOf(Sunset.Flamingo, Sunset.Violet, Sunset.Aqua)),
+        iconBg = Brush.linearGradient(listOf(Sunset.Flamingo, Sunset.Tangerine)),
+        iconFg = Color.White,
         uppercase = true,
         clock = TextStyle(
             fontFamily = anton,
@@ -117,7 +122,7 @@ private fun sunsetLook(): Look {
         ),
         date = TextStyle(fontFamily = barlowCondensed, fontWeight = FontWeight.SemiBold, fontSize = 18.sp, letterSpacing = 3.sp, color = Sunset.Aqua),
         caption = TextStyle(fontFamily = barlow, fontSize = 13.5.sp, color = Sunset.TextDim),
-        homeApp = TextStyle(fontFamily = barlowCondensed, fontWeight = FontWeight.SemiBold, fontSize = 31.sp, letterSpacing = 1.5.sp, color = Sunset.Text),
+        homeApp = TextStyle(fontFamily = barlowCondensed, fontWeight = FontWeight.SemiBold, fontSize = 25.sp, letterSpacing = 1.4.sp, color = Sunset.Text),
         listApp = TextStyle(fontFamily = barlowCondensed, fontWeight = FontWeight.Medium, fontSize = 23.sp, letterSpacing = 1.2.sp, color = Sunset.Text),
         title = TextStyle(fontFamily = anton, fontSize = 34.sp, letterSpacing = 1.sp, color = Sunset.Text),
         section = TextStyle(fontFamily = barlowCondensed, fontWeight = FontWeight.Bold, fontSize = 15.sp, letterSpacing = 3.sp),
@@ -143,7 +148,7 @@ private fun sunsetColors(): ColorScheme = darkColorScheme(
 
 // ---- Classic: quiet Pixel-like minimalism, Material You accent ----------------------------
 
-private fun classicLook(accent: Color): Look {
+private fun classicLook(accent: Color, tile: Color = accent.copy(alpha = 0.3f), onTile: Color = Color.White): Look {
     val primary = Color(0xFFF2F2F2)
     val dim = Color(0xFFB5B5B5)
     return Look(
@@ -158,11 +163,13 @@ private fun classicLook(accent: Color): Look {
         warm = accent,
         night = SolidColor(Color.Black),
         outline = null,
+        iconBg = SolidColor(tile),
+        iconFg = onTile,
         uppercase = false,
         clock = TextStyle(fontSize = 68.sp, fontWeight = FontWeight.Light, letterSpacing = (-1).sp, color = primary),
         date = TextStyle(fontSize = 16.sp, color = primary),
         caption = TextStyle(fontSize = 13.sp, color = dim),
-        homeApp = TextStyle(fontSize = 26.sp, fontWeight = FontWeight.Light, color = primary),
+        homeApp = TextStyle(fontSize = 22.sp, fontWeight = FontWeight.Normal, color = primary),
         listApp = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.Light, color = primary),
         title = TextStyle(fontSize = 30.sp, fontWeight = FontWeight.Light, color = primary),
         section = TextStyle(fontSize = 13.sp, fontWeight = FontWeight.Medium, letterSpacing = 0.6.sp),
@@ -190,7 +197,7 @@ fun UnscrollTheme(style: ThemeStyle, onWallpaper: Boolean, content: @Composable 
                     onSecondaryContainer = Color(0xFFDDE3F0),
                 )
             }.copy(background = Color.Black, onBackground = Color(0xFFF2F2F2))
-            scheme to classicLook(scheme.primary).copy(onAccent = scheme.onPrimary)
+            scheme to classicLook(scheme.primary, scheme.primaryContainer, scheme.onPrimaryContainer).copy(onAccent = scheme.onPrimary)
         }
     }
     CompositionLocalProvider(

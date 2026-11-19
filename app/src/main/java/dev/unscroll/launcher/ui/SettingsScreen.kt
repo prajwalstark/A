@@ -96,12 +96,12 @@ fun SettingsScreen(vm: LauncherViewModel) {
         )
         Text("App icons", style = Type.Body, modifier = Modifier.padding(top = 20.dp, bottom = 10.dp))
         Choices(
-            options = listOf(IconStyle.NONE to "Off", IconStyle.MONO to "Grayscale", IconStyle.COLOR to "Color"),
+            options = listOf(IconStyle.NONE to "Off", IconStyle.THEMED to "Themed", IconStyle.MONO to "Gray", IconStyle.COLOR to "Color"),
             selected = s.iconStyle,
             onSelect = { v -> vm.updateSettings { it.copy(iconStyle = v) } },
         )
         Text(
-            "Grayscale icons are less tempting than colorful ones.",
+            "Themed and gray icons are calmer than full color: less tempting to tap.",
             style = Type.Caption,
             modifier = Modifier.padding(top = 8.dp, bottom = 8.dp),
         )
@@ -146,7 +146,7 @@ fun SettingsScreen(vm: LauncherViewModel) {
             Text("Huge".label(), style = Type.Caption.copy(color = Ink.Faint))
         }
         Text("A–Z rail", style = Type.Body, modifier = Modifier.padding(top = 16.dp))
-        Text("The side your thumb scrubs through apps from", style = Type.Caption, modifier = Modifier.padding(top = 2.dp, bottom = 10.dp))
+        Text("The edge your thumb scrubs from, on home and in the app list", style = Type.Caption, modifier = Modifier.padding(top = 2.dp, bottom = 10.dp))
         Choices(
             options = listOf(true to "Left", false to "Right"),
             selected = s.railOnLeft,

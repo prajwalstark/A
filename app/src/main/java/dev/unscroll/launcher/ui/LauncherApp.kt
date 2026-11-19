@@ -54,6 +54,8 @@ fun LauncherApp(vm: LauncherViewModel) {
         animationSpec = tween(300),
         label = "scrim",
     )
+    val homeReset by vm.homeReset.collectAsStateWithLifecycle()
+    val visibleApps = remember(apps, settings.hidden) { apps.filterNot { it.key in settings.hidden } }
     val labelOf = remember(settings.renamed) { { app: AppInfo -> settings.renamed[app.key] ?: app.label } }
 
     UnscrollTheme(style = settings.theme, onWallpaper = settings.backdrop != Backdrop.BLACK) {
@@ -81,10 +83,14 @@ fun LauncherApp(vm: LauncherViewModel) {
                             BackHandler { /* Home is the bottom of the stack: nothing to go back to. */ }
                             HomeScreen(
                                 state = home,
+                                apps = visibleApps,
                                 labelOf = labelOf,
                                 iconStyle = settings.iconStyle,
+                                distracting = settings.distracting,
                                 screenTimeMs = usage?.values?.sum()?.takeIf { settings.showScreenTime },
                                 showAppListHint = settings.gestures.values.contains(GestureAction.AppList),
+                                railOnLeft = settings.railOnLeft,
+                                resetKey = homeReset,
                                 onOpen = vm::open,
                                 onLongPressApp = { sheetApp = it },
                                 onGesture = vm::perform,
@@ -93,7 +99,7 @@ fun LauncherApp(vm: LauncherViewModel) {
                             )
                         }
                         Screen.Drawer -> DrawerScreen(
-                            apps = apps.filterNot { it.key in settings.hidden },
+                            apps = visibleApps,
                             labelOf = labelOf,
                             distracting = settings.distracting,
                             iconStyle = settings.iconStyle,

@@ -116,7 +116,7 @@ fun DockList(
     val listStart = if (railOnLeft) railWidth else 0.dp
     // With icons switched off, they still appear on the apps you magnify.
     val iconsAtRest = iconStyle != IconStyle.NONE
-    val drawnIconStyle = if (iconStyle == IconStyle.MONO) IconStyle.MONO else IconStyle.COLOR
+    val drawnIconStyle = if (iconStyle == IconStyle.NONE) IconStyle.THEMED else iconStyle
 
     // Finger position in px within this layout; negative when no finger is down.
     var fingerY by remember { mutableFloatStateOf(previewFingerY ?: -1f) }

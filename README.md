@@ -3,15 +3,18 @@
 A calm, minimalist Android launcher that makes your phone a tool again instead of a slot machine.
 
 <p>
-  <img src="docs/home.png" width="250" alt="Home screen in the Sunset theme: gradient clock, date, screen time and five apps as text">
-  <img src="docs/app-list.png" width="250" alt="App list magnifying like the macOS Dock while the thumb is on M in the A–Z rail; Maps is centered with its icon">
-  <img src="docs/pause.png" width="250" alt="Mindful pause before opening Instagram">
+  <img src="docs/home.png" width="200" alt="Home screen: gradient clock, favorites with themed icons, and a thin A–Z rail on the right edge">
+  <img src="docs/home-wave.png" width="200" alt="Scrubbing the A–Z rail: letters bulge out in a wave around the thumb, and apps starting with S appear beside it">
+  <img src="docs/app-list.png" width="200" alt="App list magnifying like the macOS Dock while the thumb is on the A–Z rail">
+  <img src="docs/pause.png" width="200" alt="Mindful pause before opening Instagram">
 </p>
 
 ## What it does
 
-- **A quiet home screen.** A clock, today's screen time, and up to seven apps as plain text. No icons (unless you want them), badges, widgets, or feeds.
-- **One-hand friendly.** Your apps sit in the lower half of the screen. In the app list, the search box is at the bottom, and the best match lands right above it.
+- **A quiet home screen.** A clock, today's screen time, and up to seven favorite apps right below it. No badges, widgets, or feeds.
+- **A wave alphabet on home.** A thin A–Z strip runs along the edge of the home screen. Touch it and the letters bulge out in a wave around your thumb, with the current letter in a lit bubble. That letter's apps appear beside your thumb, so you can reach any app without opening the app list. ★ at the top goes back to your favorites, and tapping empty space or pressing Back does too.
+- **Themed icons.** Each app's one-color glyph (Android 13+ themed icons) sits on a small accent tile. Apps without a glyph show their initial. You can switch to full-color or gray icons, or turn icons off.
+- **One-hand friendly.** Everything is a thumb-slide along the screen edge, on whichever side you choose. In the app list, the search box is at the bottom, and the best match lands right above it.
 - **A Dock-style app list that never scrolls.** Every app fits on screen, packed toward your thumb.
   - Slide your thumb along the A–Z rail on the right edge, or the left edge if you choose that in Settings. The apps beside it magnify like the macOS Dock: they grow, their icons fade in, and they pop out toward the center. The current letter rides with your thumb, and a haptic tick plays as you pass each app.
   - Lift to open the highlighted app, hold still to open its menu, or slide off the list to cancel. Tap any readable app in the list to open it directly.
@@ -23,7 +26,7 @@ A calm, minimalist Android launcher that makes your phone a tool again instead o
   - **Sunset** (default): a neon dusk palette with hot pink to orange gradients, deep violet nights and aqua highlights. It uses the bold condensed Anton and Barlow fonts in a game-menu style.
   - **Classic**: quiet, Pixel-like minimalism with Material You accent colors taken from your wallpaper (Android 12+).
   - Either theme can show your wallpaper clear or dimmed, or hide it behind a solid background.
-- **Customizable.** Icons can be off, grayscale or in color. You can rename apps and hide apps. Five gestures (swipe up, down, left and right, and double-tap) can each open the app list, notifications or quick settings, lock the screen, or open any app.
+- **Customizable.** Icons can be themed, gray, in color, or off. You can rename apps and hide apps. Five gestures (swipe up, down, left and right, and double-tap) can each open the app list, notifications or quick settings, lock the screen, or open any app.
 
 Social and video apps such as Instagram, TikTok, YouTube, X, Reddit and Snapchat are marked as distracting on first run if you have them installed. Long-press any app to change that.
 
@@ -31,6 +34,7 @@ Social and video apps such as Instagram, TikTok, YouTube, X, Reddit and Snapchat
 
 | On the home screen | Default |
 | --- | --- |
+| Slide along the A–Z strip | Show apps for that letter |
 | Swipe up | App list |
 | Swipe down | Notifications |
 | Double tap | Lock screen |
