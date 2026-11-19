@@ -99,6 +99,7 @@ fun LauncherApp(vm: LauncherViewModel) {
                             iconStyle = settings.iconStyle,
                             openKeyboard = settings.openKeyboard,
                             magnification = settings.magnification,
+                            railOnLeft = settings.railOnLeft,
                             onOpen = vm::open,
                             onLongPressApp = { sheetApp = it },
                             onClose = { vm.show(Screen.Home) },

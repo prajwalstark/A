@@ -145,6 +145,14 @@ fun SettingsScreen(vm: LauncherViewModel) {
             Spacer(Modifier.weight(1f))
             Text("Huge".label(), style = Type.Caption.copy(color = Ink.Faint))
         }
+        Text("A–Z rail", style = Type.Body, modifier = Modifier.padding(top = 16.dp))
+        Text("The side your thumb scrubs through apps from", style = Type.Caption, modifier = Modifier.padding(top = 2.dp, bottom = 10.dp))
+        Choices(
+            options = listOf(true to "Left", false to "Right"),
+            selected = s.railOnLeft,
+            onSelect = { v -> vm.updateSettings { it.copy(railOnLeft = v) } },
+        )
+        Spacer(Modifier.height(8.dp))
         SettingRow(
             title = "Keyboard opens with app list",
             subtitle = if (s.openKeyboard) "Type first: the list shrinks above the keyboard" else "Slide over the list; tap search to type",

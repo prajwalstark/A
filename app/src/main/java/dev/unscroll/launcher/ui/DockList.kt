@@ -79,7 +79,7 @@ private const val TEXT_GONE = 0.3f
 /**
  * An app list that never scrolls. Every app fits on screen, packed against the bottom edge.
  *
- * Slide your thumb along the A–Z rail on the right and the apps beside it magnify like the
+ * Slide your thumb along the A–Z rail (on the right, or the left for left-handed use) and the apps beside it magnify like the
  * macOS Dock: they grow, their icons fade in, and they pop out toward the centre. Lift to open
  * the highlighted app, hold still for its menu, slide off the list to cancel. The list itself
  * is tap-to-open for any app that's readable.
@@ -99,6 +99,8 @@ fun DockList(
     showIndex: Boolean = true,
     /** 0 = subtle, 1 = huge. */
     strength: Float = 0.5f,
+    /** Put the A–Z rail on the left edge instead of the right. */
+    railOnLeft: Boolean = false,
     @VisibleForTesting previewFingerY: Float? = null,
 ) {
     val look = LocalLook.current
@@ -110,6 +112,8 @@ fun DockList(
     val focusHeight = focusHeight(strength)
     val currentFocusHeight by rememberUpdatedState(focusHeight)
     val railWidth = if (showIndex) RailWidth else 0.dp
+    // Where the app list starts: after the rail when it's on the left.
+    val listStart = if (railOnLeft) railWidth else 0.dp
     // With icons switched off, they still appear on the apps you magnify.
     val iconsAtRest = iconStyle != IconStyle.NONE
     val drawnIconStyle = if (iconStyle == IconStyle.MONO) IconStyle.MONO else IconStyle.COLOR
@@ -167,7 +171,7 @@ fun DockList(
                     drawRoundRect(
                         color = look.faint,
                         alpha = barAlpha * (if (apps[i].packageName in distracting) 0.45f else 0.9f),
-                        topLeft = Offset(pad, drawLens.tops[i] + (drawLens.heights[i] - h) / 2f),
+                        topLeft = Offset(listStart.toPx() + pad, drawLens.tops[i] + (drawLens.heights[i] - h) / 2f),
                         size = Size(w, h),
                         cornerRadius = CornerRadius(h / 2f),
                     )
@@ -175,7 +179,7 @@ fun DockList(
 
                 if (rail <= 0f) return@drawBehind
                 // The rail: a soft track that lights up while your thumb is on it...
-                val railX = size.width - rail
+                val railX = if (railOnLeft) 0f else size.width - rail
                 val top = drawLens.tops[0]
                 drawRoundRect(
                     brush = look.accentBrush,
@@ -212,14 +216,18 @@ fun DockList(
                     drawText(big, topLeft = Offset(cx - big.size.width / 2f, centre - big.size.height / 2f))
                 }
             }
-            .pointerInput(apps.size, showIndex) {
+            .pointerInput(apps.size, showIndex, railOnLeft) {
                 awaitEachGesture {
                     val down = awaitFirstDown(requireUnconsumed = false)
                     val height = size.height.toFloat()
                     val rowPx = RowHeight.toPx()
                     val focusPx = currentFocusHeight.toPx()
                     val readableAtRest = touchLens.restScale(height, rowPx) >= TEXT_FULL
-                    val onRail = !showIndex || down.position.x >= size.width - RailWidth.toPx()
+                    val onRail = !showIndex || if (railOnLeft) {
+                        down.position.x <= RailWidth.toPx()
+                    } else {
+                        down.position.x >= size.width - RailWidth.toPx()
+                    }
 
                     if (!onRail) {
                         // The list itself: tap a readable app to open it, hold for its menu.
@@ -355,7 +363,7 @@ fun DockList(
                 val iconSpace = (iconPx + gapPx) * scale * iconShown
                 // Pop out: the more a row is magnified, the further it slides toward the centre.
                 val groupWidth = iconSpace + row.width * scale
-                val x = ((listWidth - groupWidth) / 2f).coerceAtLeast(0f) * pop
+                val x = listStart.toPx() + ((listWidth - groupWidth) / 2f).coerceAtLeast(0f) * pop
                 val fade = textAlpha(scale)
 
                 icons[i].placeWithLayer(x.roundToInt(), (centreY - iconPx / 2f).roundToInt()) {
