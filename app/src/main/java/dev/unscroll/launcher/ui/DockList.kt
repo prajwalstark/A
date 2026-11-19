@@ -59,8 +59,12 @@ import kotlin.math.roundToInt
 /** Height of one row at scale 1. Rows are laid out once at this size and scaled on the GPU. */
 private val RowHeight = 48.dp
 
-/** How tall the row under your finger gets. */
-private val FocusHeight = 88.dp
+/** How tall the row under your finger gets, from subtle (strength 0) to huge (strength 1). */
+private val FocusHeightMin = 56.dp
+private val FocusHeightMax = 120.dp
+
+private fun focusHeight(strength: Float) =
+    FocusHeightMin + (FocusHeightMax - FocusHeightMin) * strength.coerceIn(0f, 1f)
 
 /** Rows smaller than this (as a fraction of [RowHeight]) fade from text into a thin bar. */
 private const val TEXT_FULL = 0.5f
@@ -84,6 +88,8 @@ fun DockList(
     modifier: Modifier = Modifier,
     /** Show A–Z markers beside the resting list (only makes sense when it's alphabetical). */
     showIndex: Boolean = true,
+    /** 0 = subtle, 1 = huge. */
+    strength: Float = 0.5f,
     @VisibleForTesting previewFingerY: Float? = null,
 ) {
     val look = LocalLook.current
@@ -92,6 +98,8 @@ fun DockList(
     val open by rememberUpdatedState(onOpen)
     val menu by rememberUpdatedState(onLongPress)
     val currentApps by rememberUpdatedState(apps)
+    val focusHeight = focusHeight(strength)
+    val currentFocusHeight by rememberUpdatedState(focusHeight)
 
     // Finger position in px within this layout; negative when no finger is down.
     var fingerY by remember { mutableFloatStateOf(previewFingerY ?: -1f) }
@@ -125,7 +133,7 @@ fun DockList(
                 // Rows too small to read are drawn as thin bars, like a dock seen from afar.
                 val n = apps.size
                 if (n == 0) return@drawBehind
-                drawLens.solve(size.height, RowHeight.toPx(), FocusHeight.toPx(), magnify.value, fingerY)
+                drawLens.solve(size.height, RowHeight.toPx(), focusHeight.toPx(), magnify.value, fingerY)
                 val pad = 4.dp.toPx()
                 var lastLetterY = Float.NEGATIVE_INFINITY
                 for (i in 0 until n) {
@@ -160,7 +168,7 @@ fun DockList(
                     val down = awaitFirstDown(requireUnconsumed = false)
                     val height = size.height.toFloat()
                     val rowPx = RowHeight.toPx()
-                    val focusPx = FocusHeight.toPx()
+                    val focusPx = currentFocusHeight.toPx()
                     // Was this app list readable before you touched it? Then a plain tap opens.
                     val readableAtRest = touchLens.restScale(height, rowPx) >= TEXT_FULL
 
@@ -233,7 +241,8 @@ fun DockList(
         },
     ) { measurables, constraints ->
         val rowPx = RowHeight.roundToPx()
-        val maxScale = FocusHeight.toPx() / RowHeight.toPx()
+        val focusPx = focusHeight.toPx()
+        val maxScale = focusPx / RowHeight.toPx()
         // Leave room so a magnified row still fits the width.
         val rowConstraints = Constraints(
             maxWidth = (constraints.maxWidth / maxScale).roundToInt(),
@@ -245,13 +254,19 @@ fun DockList(
 
         val height = if (constraints.hasBoundedHeight) constraints.maxHeight else rowPx * placeables.size
         layout(constraints.maxWidth, height) {
-            val under = layoutLens.solve(height.toFloat(), rowPx.toFloat(), FocusHeight.toPx(), magnify.value, fingerY)
+            val under = layoutLens.solve(height.toFloat(), rowPx.toFloat(), focusPx, magnify.value, fingerY)
             if (previewFingerY != null && focused != under) focused = under
+            val restScale = layoutLens.restScale(height.toFloat(), rowPx.toFloat())
             placeables.forEachIndexed { i, placeable ->
                 val h = layoutLens.heights[i]
                 val scale = h / rowPx
                 val y = layoutLens.tops[i] + h / 2f - rowPx / 2f
-                placeable.placeWithLayer(0, y.roundToInt()) {
+                // Pop out: the more a row is magnified, the further it slides toward the centre.
+                // The row under the finger ends up centred; its neighbours trace an arc.
+                val grown = if (maxScale > restScale) ((scale - restScale) / (maxScale - restScale)).coerceIn(0f, 1f) else 0f
+                val pop = grown * grown * (3f - 2f * grown) // smoothstep, for a rounder arc
+                val x = ((constraints.maxWidth - placeable.width * scale) / 2f).coerceAtLeast(0f) * pop
+                placeable.placeWithLayer(x.roundToInt(), y.roundToInt()) {
                     scaleX = scale
                     scaleY = scale
                     transformOrigin = TransformOrigin(0f, 0.5f)

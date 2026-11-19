@@ -12,7 +12,7 @@ A calm, minimalist Android launcher that makes your phone a tool again instead o
 
 - **A quiet home screen.** A clock, today's screen time, and up to seven apps as plain text. No icons (unless you want them), badges, widgets, or feeds.
 - **One-hand friendly.** Your apps sit in the lower half of the screen. In the app list, the search box is at the bottom, and the best match lands right above it.
-- **A Dock-style app list that never scrolls.** Every app fits on screen, packed toward your thumb. Slide a finger over the list and the apps near it magnify like the macOS Dock, with a haptic tick as you pass each one.
+- **A Dock-style app list that never scrolls.** Every app fits on screen, packed toward your thumb. Slide a finger over the list and the apps near it magnify like the macOS Dock and pop out toward the center of the screen in an arc, with a haptic tick as you pass each one. Set the strength with the Magnification slider in Settings.
   - Lift your finger to open the highlighted app, hold still to open its menu, or slide off the list to cancel.
   - With a long app list, the resting view becomes a compact stack of bars with A–Z markers, and magnification makes the area under your finger readable.
   - Tap the search box to type instead. Press Enter to open the top match. In Settings you can have the keyboard open automatically.

@@ -51,6 +51,7 @@ fun DrawerScreen(
     distracting: Set<String>,
     iconStyle: IconStyle,
     openKeyboard: Boolean,
+    magnification: Float,
     onOpen: (AppInfo) -> Unit,
     onLongPressApp: (AppInfo) -> Unit,
     onClose: () -> Unit,
@@ -115,6 +116,7 @@ fun DrawerScreen(
                     onOpen = open,
                     onLongPress = onLongPressApp,
                     showIndex = !searching,
+                    strength = magnification,
                     previewFingerY = previewFingerY,
                     modifier = Modifier
                         .fillMaxSize()

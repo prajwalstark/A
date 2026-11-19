@@ -3,6 +3,7 @@ package dev.unscroll.launcher.ui
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,11 +18,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -102,14 +106,6 @@ fun SettingsScreen(vm: LauncherViewModel) {
             modifier = Modifier.padding(top = 8.dp, bottom = 8.dp),
         )
         SettingRow(
-            title = "Keyboard opens with app list",
-            subtitle = if (s.openKeyboard) "Type first: the list shrinks above the keyboard" else "Slide over the list; tap search to type",
-            trailing = {
-                Switch(checked = s.openKeyboard, onCheckedChange = { on -> vm.updateSettings { it.copy(openKeyboard = on) } })
-            },
-            onClick = { vm.updateSettings { it.copy(openKeyboard = !it.openKeyboard) } },
-        )
-        SettingRow(
             title = "Screen time on home",
             subtitle = if (s.showScreenTime && !status.hasUsageAccess) "Tap to allow usage access" else "How long you've used your phone today",
             trailing = {
@@ -124,6 +120,39 @@ fun SettingsScreen(vm: LauncherViewModel) {
             onClick = { if (!status.hasUsageAccess) ScreenTime.requestAccess(context) },
         )
 
+        // ---- App list ----------------------------------------------------------------------
+        SectionTitle("App list")
+        var magnification by remember(s.magnification) { mutableFloatStateOf(s.magnification) }
+        Text("Magnification", style = Type.Body, modifier = Modifier.padding(top = 4.dp))
+        Text(
+            "How much apps grow and pop out as your finger slides over the list",
+            style = Type.Caption,
+            modifier = Modifier.padding(top = 2.dp),
+        )
+        Slider(
+            value = magnification,
+            onValueChange = { magnification = it },
+            onValueChangeFinished = { vm.updateSettings { it.copy(magnification = magnification) } },
+            colors = SliderDefaults.colors(
+                thumbColor = MaterialTheme.colorScheme.primary,
+                activeTrackColor = MaterialTheme.colorScheme.primary,
+                inactiveTrackColor = Ink.Sheet,
+            ),
+            modifier = Modifier.padding(top = 4.dp),
+        )
+        Row(Modifier.fillMaxWidth()) {
+            Text("Subtle".label(), style = Type.Caption.copy(color = Ink.Faint))
+            Spacer(Modifier.weight(1f))
+            Text("Huge".label(), style = Type.Caption.copy(color = Ink.Faint))
+        }
+        SettingRow(
+            title = "Keyboard opens with app list",
+            subtitle = if (s.openKeyboard) "Type first: the list shrinks above the keyboard" else "Slide over the list; tap search to type",
+            trailing = {
+                Switch(checked = s.openKeyboard, onCheckedChange = { on -> vm.updateSettings { it.copy(openKeyboard = on) } })
+            },
+            onClick = { vm.updateSettings { it.copy(openKeyboard = !it.openKeyboard) } },
+        )
         // ---- Distracting apps -------------------------------------------------------------
         SectionTitle("Mindful pause")
         Text("Wait before a distracting app opens", style = Type.Body, modifier = Modifier.padding(bottom = 10.dp))

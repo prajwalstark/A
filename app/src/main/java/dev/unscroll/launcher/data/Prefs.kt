@@ -75,6 +75,8 @@ data class LauncherSettings(
     val showScreenTime: Boolean = true,
     /** Pop up the keyboard as soon as the app list opens. */
     val openKeyboard: Boolean = false,
+    /** App list Dock effect: 0 = subtle, 1 = huge. */
+    val magnification: Float = 0.5f,
     val iconStyle: IconStyle = IconStyle.NONE,
     val theme: ThemeStyle = ThemeStyle.SUNSET,
     val backdrop: Backdrop = Backdrop.DIM,
@@ -100,6 +102,7 @@ class Prefs(context: Context) {
             pauseSeconds = sp.getInt(KEY_PAUSE, 10),
             showScreenTime = sp.getBoolean(KEY_SCREEN_TIME, true),
             openKeyboard = sp.getBoolean(KEY_KEYBOARD, false),
+            magnification = sp.getFloat(KEY_MAGNIFICATION, 0.5f),
             iconStyle = enumOrDefault(sp.getString(KEY_ICONS, null), IconStyle.NONE),
             theme = enumOrDefault(sp.getString(KEY_THEME, null), ThemeStyle.SUNSET),
             backdrop = enumOrDefault(sp.getString(KEY_BACKDROP, null), Backdrop.DIM),
@@ -122,6 +125,7 @@ class Prefs(context: Context) {
             putInt(KEY_PAUSE, s.pauseSeconds)
             putBoolean(KEY_SCREEN_TIME, s.showScreenTime)
             putBoolean(KEY_KEYBOARD, s.openKeyboard)
+            putFloat(KEY_MAGNIFICATION, s.magnification)
             putString(KEY_ICONS, s.iconStyle.name)
             putString(KEY_THEME, s.theme.name)
             putString(KEY_BACKDROP, s.backdrop.name)
@@ -166,6 +170,7 @@ class Prefs(context: Context) {
         private const val KEY_PAUSE = "pause_seconds"
         private const val KEY_SCREEN_TIME = "show_screen_time"
         private const val KEY_KEYBOARD = "open_keyboard"
+        private const val KEY_MAGNIFICATION = "magnification"
         private const val KEY_ICONS = "icon_style"
         private const val KEY_THEME = "theme"
         private const val KEY_BACKDROP = "backdrop"
